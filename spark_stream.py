@@ -16,7 +16,7 @@ def create_keyspace(session):
 
 def create_table(session):
     session.execute("""
-    CREATE TABLE IF NOT EXIST spark_streams.created_users (
+    CREATE TABLE IF NOT EXISTS spark_streams.created_users (
                     id UUID PRIMARY KEY,
                     first_name TEXT,
                     last_name TEXT,
@@ -63,16 +63,16 @@ def insert_data(session, **kwargs):
         logging.error(f"could not insert data due to {e}")
 
 def create_spark_connection():
-    # creating spark connection
     s_conn = None
+
     try:
         s_conn = SparkSession.builder \
             .appName('SparkDataStreaming') \
-            .config('spark.jars.packages', 
-                    "com.datastax.sparx:spark-cassandra-connector_2.13:3.41",
-                    "org.apache.spark:spark-sql-kafka-0-10_2.13:3.4.1") \
+            .config('spark.jars.packages', "com.datastax.spark:spark-cassandra-connector_2.13:3.4.1,"
+                                           "org.apache.spark:spark-sql-kafka-0-10_2.13:3.4.1") \
             .config('spark.cassandra.connection.host', 'localhost') \
             .getOrCreate()
+
         s_conn.sparkContext.setLogLevel("ERROR")
         logging.info("Spark connection created successfully!")
     except Exception as e:
@@ -101,7 +101,7 @@ def create_cassandra_connection():
         cluster = Cluster(['localhost'])
 
         cas_session = cluster.connect()
-        return session
+        return cas_session
     
     except Exception as e:
         logging.error(f"Could not create cassandra connection due to {e}")
